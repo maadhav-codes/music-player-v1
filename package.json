@@ -1,0 +1,47 @@
+{
+  "name": "react-scaffold",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext ts,tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:all": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md,yml,yaml}\" --ignore-path .prettierignore",
+    "code-quality": "yarn lint && yarn format:check && yarn type-check",
+    "code-quality:fix": "yarn lint:fix && yarn format",
+    "type-check": "tsc --noEmit",
+    "preview": "vite preview",
+    "clean": "rm -rf dist node_modules .yarn",
+    "analyze": "npx vite-bundle-analyzer"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.8",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "^7.6.1",
+    "tailwindcss": "^4.1.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/node": "^22.15.29",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "prettier": "3.5.3",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.30.1",
+    "vite": "^6.3.5",
+    "vite-plugin-svgr": "^4.3.0"
+  },
+  "packageManager": "yarn@4.9.1"
+}

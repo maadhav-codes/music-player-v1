@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+
+# Cache directories
+.cache/
+.vite/
+.turbo/
+
+# Package manager files
+.yarn/
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Generated files
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# Environment files
+.env*
+
+# Editor files
+.vscode/
+.idea/
+
+# Ignore artifacts:
+coverage
