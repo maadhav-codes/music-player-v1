@@ -23,16 +23,29 @@ export function ProgressBar({
           onValueChange={onSeek}
           max={100}
           step={0.1}
-          className='w-full'
+          className='w-full group'
           aria-label='Seek slider'
           aria-valuenow={progressPercent}
           aria-valuemin={0}
           aria-valuemax={100}
         />
       </div>
-      <div className='flex justify-between text-sm text-muted-foreground font-mono'>
-        <span aria-label='Current time'>{formatTime(currentTime)}</span>
-        <span aria-label='Duration'>{formatTime(duration)}</span>
+      <div className='flex items-center justify-between text-sm'>
+        <time
+          className='text-foreground bg-muted/50 min-w-[3rem] rounded-sm px-2 py-1 text-center font-mono font-medium'
+          aria-label='Current time'
+          dateTime={`PT${Math.floor(currentTime)}S`}
+        >
+          {formatTime(currentTime)}
+        </time>
+
+        <time
+          className='text-muted-foreground bg-muted/30 min-w-[3rem] rounded-sm px-2 py-1 text-center font-mono font-medium'
+          aria-label='Total duration'
+          dateTime={`PT${Math.floor(duration)}S`}
+        >
+          {formatTime(duration)}
+        </time>
       </div>
     </section>
   );

@@ -4,7 +4,7 @@ import { AlbumArt } from '@/components/player/AlbumArt';
 import { PlayerControls } from '@/components/player/PlayerControls';
 import { ProgressBar } from '@/components/player/ProgressBar';
 import { SongInfo } from '@/components/player/SongInfo';
-import { Heart } from 'lucide-react';
+import { Heart, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Home() {
@@ -26,10 +26,20 @@ export default function Home() {
   if (!currentSong) {
     return (
       <section
-        className='flex items-center justify-center h-full'
+        className='flex h-full min-h-[60vh] flex-col items-center justify-center space-y-6'
         aria-live='polite'
       >
-        <p className='text-muted-foreground'>No song selected</p>
+        <div className='text-muted-foreground/30 animate-pulse-gentle text-6xl'>
+          🎵
+        </div>
+        <div className='space-y-2 text-center'>
+          <h2 className='text-heading text-muted-foreground'>
+            No song selected
+          </h2>
+          <p className='text-caption'>
+            Choose a song from your playlist to start listening
+          </p>
+        </div>
       </section>
     );
   }
@@ -44,26 +54,40 @@ export default function Home() {
   };
 
   return (
-    <>
+    <div className='space-y-8'>
       <audio
         ref={audioRef}
         src={currentSong.src}
         aria-label={`Currently playing: ${currentSong.title} by ${currentSong.artist}`}
       />
 
-      <header className='flex justify-between items-center'>
-        <h2 className='text-muted-foreground text-sm font-medium tracking-wide capitalize'>
+      <header className='flex items-center justify-between px-2'>
+        <h2 className='text-caption text-primary font-medium tracking-wide capitalize'>
           Now Playing
         </h2>
+
+        {playerState.isLoading && (
+          <div className='flex items-center gap-2 text-caption'>
+            <Loader2 className='w-3 h-3 animate-spin' />
+            <span>Loading...</span>
+          </div>
+        )}
 
         <Button
           variant={isFavorite ? 'default' : 'outline'}
           size='icon'
           onClick={() => toggleFavorite(currentSong.id)}
           aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          className={cn(
+            'h-12 w-12 rounded-full transition-all duration-200',
+            isFavorite && 'bg-red-500 text-white shadow-lg hover:bg-red-600'
+          )}
         >
           <Heart
-            className={cn('w-5 h-5', isFavorite && 'fill-current')}
+            className={cn(
+              'h-5 w-5 transition-all duration-200',
+              isFavorite && 'scale-110 fill-current'
+            )}
             aria-hidden='true'
           />
         </Button>
@@ -94,6 +118,6 @@ export default function Home() {
         onShuffle={toggleShuffle}
         onRepeat={toggleRepeat}
       />
-    </>
+    </div>
   );
 }

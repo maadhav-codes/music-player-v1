@@ -23,14 +23,14 @@ export default function Root() {
   }, []);
 
   return (
-    <>
+    <div className='from-background via-background to-muted/20 flex min-h-screen flex-col bg-gradient-to-br'>
       <Header networkStatus={status} currentTime={currentTime} />
 
-      <main className='container mx-auto flex h-full flex-col gap-4 p-4'>
+      <main className='container mx-auto flex flex-1 flex-col gap-4 p-4'>
         <Outlet />
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }
