@@ -26,7 +26,7 @@ export default function Root() {
     <>
       <Header networkStatus={status} currentTime={currentTime} />
 
-      <main>
+      <main className='container mx-auto flex h-full flex-col gap-4 p-4'>
         <Outlet />
       </main>
 
