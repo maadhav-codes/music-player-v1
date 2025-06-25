@@ -5,6 +5,7 @@ import Root from '@routes/root';
 import Home from '@routes/home';
 import ErrorBoundary from '@routes/error';
 import '@/index.css';
+import PlaylistTab from './routes/playlist';
 
 async function loadRootData() {
   return {
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
         index: true,
         Component: Home,
       },
+      { path: '/playlist', Component: PlaylistTab },
     ],
   },
 ]);
