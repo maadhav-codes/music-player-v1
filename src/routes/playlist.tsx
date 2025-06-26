@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { useMusicPlayer } from '@/hooks/use-music-player';
 import { cn } from '@/lib/utils';
-import { Heart, Music, Play, Shuffle, Trash2 } from 'lucide-react';
+import { FolderOpen, Heart, Music, Play, Shuffle, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 export default function PlaylistTab() {
   const {
@@ -12,6 +13,8 @@ export default function PlaylistTab() {
     clearPlaylist,
     formatTime,
   } = useMusicPlayer();
+
+  const navigate = useNavigate();
 
   const totalDuration = songs.reduce((total, song) => {
     const [mins, secs] = song.duration.split(':').map(Number);
@@ -34,7 +37,7 @@ export default function PlaylistTab() {
   if (songs.length === 0) {
     return (
       <section
-        className='flex flex-col h-full'
+        className='flex flex-col gap-y-8 h-full'
         aria-labelledby='empty-playlist-heading'
       >
         <header className='p-6 text-center border-b'>
@@ -61,7 +64,11 @@ export default function PlaylistTab() {
               <p className='text-muted-foreground mb-6'>
                 Add music files to get started
               </p>
-              <Button aria-label='Browse files to add to playlist'>
+              <Button
+                aria-label='Browse files to add to playlist'
+                onClick={() => navigate('/browse')}
+              >
+                <FolderOpen className='w-4 h-4 mr-2' />
                 Browse Files
               </Button>
             </div>

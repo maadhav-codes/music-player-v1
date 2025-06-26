@@ -6,7 +6,7 @@ import { Upload, FolderOpen, Loader2 } from 'lucide-react';
 import type { Song } from '@/types/data';
 
 export default function BrowseTab() {
-  const { addSongs } = useMusicPlayer();
+  const { addSongs, songs } = useMusicPlayer();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,9 +35,7 @@ export default function BrowseTab() {
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return (
-      Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-    );
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const extractTitle = (filename: string): string => {
@@ -47,20 +45,26 @@ export default function BrowseTab() {
       .trim();
   };
 
-  const createSongFromFile = async (file: File): Promise<Song> => {
+  const createSongFromFile = (file: File): Promise<Song> => {
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file);
       const audio = new Audio();
       audio.src = url;
 
-      audio.addEventListener('loadedmetadata', () => {
+      const cleanup = () => {
+        audio.removeEventListener('loadedmetadata', onLoaded);
+        audio.removeEventListener('error', onError);
+      };
+
+      const onLoaded = () => {
+        cleanup();
         const duration = Math.floor(audio.duration);
         const mins = Math.floor(duration / 60);
         const secs = duration % 60;
         const formattedDuration = `${mins}:${secs.toString().padStart(2, '0')}`;
 
         const song: Song = {
-          id: `local-${Date.now()}-${Math.random()}`,
+          id: `local-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           title: extractTitle(file.name),
           artist: 'Unknown Artist',
           album: 'Local Files',
@@ -75,49 +79,59 @@ export default function BrowseTab() {
           bitrate: 'Unknown',
         };
         resolve(song);
-      });
+      };
 
-      audio.addEventListener('error', () => {
+      const onError = () => {
+        cleanup();
         URL.revokeObjectURL(url);
         reject(new Error(`Failed to load audio file: ${file.name}`));
-      });
+      };
+
+      audio.addEventListener('loadedmetadata', onLoaded, { once: true });
+      audio.addEventListener('error', onError, { once: true });
+
+      setTimeout(() => {
+        cleanup();
+        reject(new Error(`Timeout loading metadata for: ${file.name}`));
+      }, 10000);
     });
   };
 
   const processFiles = async (files: File[]) => {
     setError(null);
     setIsProcessing(true);
-    const audioFiles = files.filter(isAudioFile);
-
-    if (audioFiles.length === 0) {
-      setError(
-        'No supported audio files found. Please select MP3, WAV, OGG, or other supported formats.'
-      );
-      setIsProcessing(false);
-      return;
-    }
 
     try {
-      const newSongs: Song[] = [];
-      for (const file of audioFiles) {
-        try {
-          const song = await createSongFromFile(file);
-          newSongs.push(song);
-        } catch (error) {
-          console.error(`Error processing file ${file.name}:`, error);
-        }
+      const audioFiles = files.filter(isAudioFile);
+
+      if (audioFiles.length === 0) {
+        throw new Error(
+          'No supported audio files found. Please select MP3, WAV, OGG, or other supported formats.'
+        );
       }
 
-      if (newSongs.length > 0) {
-        addSongs(newSongs);
-      } else {
-        setError(
+      const processingPromises = audioFiles.map(file =>
+        createSongFromFile(file).catch(error => {
+          console.error(`Error processing file ${file.name}:`, error);
+          return null;
+        })
+      );
+
+      const results = await Promise.all(processingPromises);
+      const newSongs = results.filter(Boolean) as Song[];
+
+      if (newSongs.length === 0) {
+        throw new Error(
           'Could not process any of the selected files. Please check the file formats.'
         );
       }
+
+      addSongs(newSongs);
     } catch (error) {
       console.error('Error processing files:', error);
-      setError('An unexpected error occurred while processing your files.');
+      setError(
+        error instanceof Error ? error.message : 'An unexpected error occurred'
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -125,7 +139,9 @@ export default function BrowseTab() {
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    processFiles(files);
+    if (files.length > 0) {
+      processFiles(files);
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -145,15 +161,19 @@ export default function BrowseTab() {
     event.preventDefault();
     setIsDragOver(false);
     const files = Array.from(event.dataTransfer.files);
-    processFiles(files);
+    if (files.length > 0) {
+      processFiles(files);
+    }
   };
 
   const handleBrowseClick = () => {
-    fileInputRef.current?.click();
+    if (!isProcessing) {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
+    if ((event.key === 'Enter' || event.key === ' ') && !isProcessing) {
       handleBrowseClick();
     }
   };
@@ -255,11 +275,45 @@ export default function BrowseTab() {
           <h3 id='recent-files-heading' className='text-lg font-semibold'>
             Recently Added
           </h3>
-          <Card className='p-4'>
-            <p className='text-muted-foreground italic text-center text-sm'>
-              No recent files
-            </p>
-          </Card>
+
+          {songs.length === 0 ? (
+            <Card className='p-4'>
+              <p className='text-muted-foreground italic text-center text-sm'>
+                No recent files
+              </p>
+            </Card>
+          ) : (
+            <ul className='flex-1 overflow-y-auto' aria-label='Song list'>
+              {songs.map(song => (
+                <li
+                  key={song.id}
+                  className='p-4 border-b transition-colors hover:bg-muted/50'
+                >
+                  <div className='flex justify-between items-center'>
+                    <div className='flex-1 min-w-0'>
+                      <div className='flex items-center gap-2'>
+                        <h3 className='font-semibold truncate'>{song.title}</h3>
+                      </div>
+                      <p className='text-sm text-muted-foreground truncate'>
+                        {song.artist}
+                      </p>
+                      {song.isLocal && (
+                        <p className='text-xs text-muted-foreground truncate'>
+                          File: {song.fileName} ({song.fileSize})
+                        </p>
+                      )}
+                    </div>
+                    <time
+                      className='text-sm text-muted-foreground font-mono'
+                      dateTime={`PT${song.duration.replace(':', 'M')}S`}
+                    >
+                      {song.duration}
+                    </time>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </section>
     </div>
